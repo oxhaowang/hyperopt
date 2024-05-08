@@ -838,7 +838,7 @@ class MongoTrials(Trials):
     def _insert_trial_docs(self, docs):
         rval = []
         for doc in docs:
-            rval.append(self.handle.jobs.insert(doc))
+            rval.append(self.handle.jobs.insert_one(doc))
         return rval
 
     def count_by_state_unsynced(self, arg):
@@ -855,7 +855,8 @@ class MongoTrials(Trials):
             query = dict(state={"$in": states})
         if exp_key != None:
             query["exp_key"] = exp_key
-        rval = self.handle.jobs.find(query).count()
+        #rval = self.handle.jobs.find(query).count()
+        rval = self.handle.jobs.count_documents(query)
         return rval
 
     def delete_all(self, cond=None):
@@ -892,7 +893,8 @@ class MongoTrials(Trials):
 
         doc = None
         while doc is None:
-            doc = db.job_ids.find_and_modify(
+            #doc = db.job_ids.find_and_modify(
+            doc = db.job_ids.find_one_and_update(
                 query, {"$inc": {"last_id": last_id}}, upsert=True
             )
             if doc is None:
