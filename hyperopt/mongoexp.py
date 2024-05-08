@@ -502,7 +502,7 @@ class MongoJobs:
             ] = JOB_STATE_NEW  # theoretically this is redundant, theoretically
 
         try:
-            rval = self.jobs.find_and_modify(
+            rval = self.jobs.find_one_and_update(
                 cond,
                 {
                     "$set": {
@@ -512,7 +512,7 @@ class MongoJobs:
                         "refresh_time": now,
                     }
                 },
-                new=True,
+                return_document=pymongo.ReturnDocument.AFTER,
                 upsert=False,
             )
         except pymongo.errors.OperationFailure as e:
@@ -555,7 +555,9 @@ class MongoJobs:
         try:
             # warning - if doc matches nothing then this function succeeds
             # N.B. this matches *at most* one entry, and possibly zero
-            collection.update(doc_query, {"$set": dct}, upsert=False, multi=False)
+            collection.update_one(doc_query,
+                                  {"$set": dct}, 
+                                  upsert=False)
         except pymongo.errors.OperationFailure as e:
             # -- translate pymongo error class into hyperopt error class
             #    see insert() code for rationale.
